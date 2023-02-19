@@ -1,0 +1,34 @@
+{
+	"contracts": {
+		"GachaNFT": "cadence/contracts/GachaNFT.cdc",
+		"NonFungibleToken": {
+			"source": "./cadence/lib/NonFungibleToken.cdc",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7"
+			}
+		}
+	},
+	"networks": {
+		"emulator": "127.0.0.1:3569",
+		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"testnet": "access.devnet.nodes.onflow.org:9000"
+	},
+	"accounts": {
+		"default": {
+			"address": "120e725050340cab",
+			"key": "94bc30ac30af224eb1f97fae57b05128b0070615a1483e6138758f9656d720f3"
+		},
+		"emulator-account": {
+			"address": "f8d6e0586b0a20c7",
+			"key": "6d12eebfef9866c9b6fa92b97c6e705c26a1785b1e7944da701fc545a51d4673"
+		}
+	},
+	"deployments": {
+		"emulator": {
+			"default": [
+				"GachaNFT"
+			]
+		}
+	}
+}
+ 
