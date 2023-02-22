@@ -4,7 +4,7 @@ pub contract Gacha {
   pub resource interface NFTAmount {
     pub var amount: UInt32
 
-    pub fun incrementAmount()
+    pub fun incrementAmount(amount: UInt32)
     pub fun decreseAmount(amount: UInt32) {
       pre {
         self.amount - amount >= 0: "decrease result is negative."
@@ -17,3 +17,4 @@ pub contract Gacha {
     pub fun lotteryMint()
   }
 }
+ 

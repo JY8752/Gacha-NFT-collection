@@ -1,12 +1,10 @@
 {
 	"contracts": {
+		"FungibleToken": "cadence/contracts/lib/utility/FungibleToken.cdc",
+		"Gacha": "cadence/contracts/Gacha.cdc",
 		"GachaNFT": "cadence/contracts/GachaNFT.cdc",
-		"NonFungibleToken": {
-			"source": "./cadence/lib/NonFungibleToken.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7"
-			}
-		}
+		"MetadataViews": "cadence/contracts/lib/MetadataViews.cdc",
+		"NonFungibleToken": "cadence/contracts/lib/NonFungibleToken.cdc"
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -15,20 +13,29 @@
 	},
 	"accounts": {
 		"default": {
-			"address": "120e725050340cab",
-			"key": "94bc30ac30af224eb1f97fae57b05128b0070615a1483e6138758f9656d720f3"
+			"address": "f669cb8d41ce0c74",
+			"key": "fdb4fb8205726586789cd48ebd6cfb8a6aa11deab542012ced3d4ed2b8aaa4c7"
 		},
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
 			"key": "6d12eebfef9866c9b6fa92b97c6e705c26a1785b1e7944da701fc545a51d4673"
+		},
+		"lib": {
+			"address": "fd43f9148d4b725d",
+			"key": "a245b9090f213431a6c692ae717a8b9fa981d7555f607a6c1db1a9a9bad406a4"
 		}
 	},
 	"deployments": {
 		"emulator": {
 			"default": [
-				"GachaNFT"
+				"Gacha",
+				"GachaNFT",
+				"FungibleToken"
+			],
+			"lib": [
+				"MetadataViews",
+				"NonFungibleToken"
 			]
 		}
 	}
 }
- 

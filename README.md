@@ -12,3 +12,33 @@ web2の領域においてデジタルアイテムの収集といえばソーシ�
 ## イメージ図
 
 ![](https://user-images.githubusercontent.com/58534052/219954369-d8c63ffa-7749-4ff7-8c7f-f3dcee099e75.png)
+
+## accounts
+
+アカウント作成
+```
+flow accounts create 
+```
+
+## transactions
+
+アカウントセットアップ
+```
+flow transactions send ./cadence/transactions/setup_account.cdc --signer alice
+```
+
+minter準備
+```
+flow transactions send ./cadence/transactions/setup_nft_minter.cdc --signer default
+```
+
+mint
+```
+flow transactions send ./cadence/transactions/lottery_mint.cdc --signer default eb179c27144f783c
+```
+
+## scripts
+ 
+```
+flow scripts execute ./cadence/scripts/get_amounts.cdc eb179c27144f783c
+```

@@ -1,5 +1,6 @@
-import NonFungibleToken from "../lib/NonFungibleToken.cdc"
-import MetadataViews from "../lib/MetadataViews.cdc"
+import NonFungibleToken from "./lib/NonFungibleToken.cdc"
+import MetadataViews from "./lib/MetadataViews.cdc"
+import Gacha from "./Gacha.cdc"
 
 pub contract GachaNFT: NonFungibleToken {
     // NonFungibleToken override
@@ -18,6 +19,33 @@ pub contract GachaNFT: NonFungibleToken {
     pub let CollectionPublicPath: PublicPath
     pub let MinterStoragePath: StoragePath
 
+    /// NFTとして発行するトークン情報
+    pub struct Item {
+      pub let id: UInt64
+      pub let name: String
+      pub let description: String
+      pub let thumbnail: String
+      pub let weight: UInt64
+
+      init(
+        id: UInt64,
+        name: String,
+        description: String,
+        thumbnail: String,
+        rarity: String,
+        weight: UInt64
+      ) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.thumbnail = thumbnail
+        self.weight = weight
+      }
+    }
+
+    /// key: token_kind_id value: token_info
+    pub let ids: {UInt64: Item}
+
     // NonFungibleToken override
     pub fun createEmptyCollection(): @NonFungibleToken.Collection {
       return <- create Collection()
@@ -25,7 +53,7 @@ pub contract GachaNFT: NonFungibleToken {
 
     // NonFungibleToken override
     pub resource NFT: NonFungibleToken.INFT, MetadataViews.Resolver {
-      // NonfungibleToken.INFT override unique id
+      // NonfungibleToken.INFT override token kind id(not unique)
       pub let id: UInt64
 
       /// amount
@@ -153,6 +181,8 @@ pub contract GachaNFT: NonFungibleToken {
         }
         return nil
       }
+    
+
     }
 
     // publicに公開する機能群
@@ -166,7 +196,11 @@ pub contract GachaNFT: NonFungibleToken {
                   "Cannot borrow ExampleNFT reference: the ID of the returned reference is incorrect"
           }
       }
+      pub fun increceAmount(id: UInt64, amount: UInt32)
+      pub fun getAmount(id: UInt64): UInt32
+      pub fun getAmounts(): {UInt64:UInt32}
     }
+
 
     // NonFungibleToken override
     pub resource Collection: 
@@ -179,13 +213,43 @@ pub contract GachaNFT: NonFungibleToken {
       // NonFungibleToken.Collection override
       pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
+      pub var ownedAmounts: {UInt64: UInt32}
+
       init() {
         self.ownedNFTs <- {}
+        self.ownedAmounts = {}
+      } 
+
+      pub fun increceAmount(id: UInt64, amount: UInt32) {
+        let beforeAmnount = self.ownedAmounts[id] ?? panic("Not have toknen, so instedof deposit!")
+        self.ownedAmounts[id] = beforeAmnount + amount
+      }
+
+      pub fun decreseAmount(id: UInt64, amount: UInt32) {
+        pre {
+          self.ownedAmounts[id] == nil: "Not have token!!"
+          self.ownedAmounts[id]! - amount < 0: "The amount you do not have is specified!"
+        }
+        let afterAmount = self.ownedAmounts[id]! - amount
+        self.ownedAmounts[id] = afterAmount
+        if(afterAmount == 0) {
+          // なくなったのでリソースも消す
+          destroy self.withdraw(withdrawID: id)
+        }
+      }
+
+      pub fun getAmount(id: UInt64): UInt32 {
+        return self.ownedAmounts[id] ?? 0
+      }
+
+      pub fun getAmounts(): {UInt64:UInt32} {
+        return self.ownedAmounts
       }
 
       // NonFungibleToken.Provider override
       pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
         let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
+        self.ownedAmounts.remove(key: withdrawID)               
 
         emit Withdraw(id: token.id, from: self.owner?.address)
 
@@ -194,12 +258,17 @@ pub contract GachaNFT: NonFungibleToken {
 
       // NonFungibleToken.Receiver override
       pub fun deposit(token: @NonFungibleToken.NFT) {
+        pre {
+          self.ownedAmounts[token.id] == nil || self.ownedAmounts[token.id]! <= 0: "Already owned!"
+        }
         let token <- token as! @GachaNFT.NFT // important! castする必要がある
 
         let id: UInt64 = token.id
 
         // add the new token to the dictionary which removes the old one
         let oldToken <- self.ownedNFTs[id] <- token
+
+        self.ownedAmounts[id] = 1
 
         emit Deposit(id: id, to: self.owner?.address)
 
@@ -231,7 +300,7 @@ pub contract GachaNFT: NonFungibleToken {
       pub fun borrowViewResolver(id: UInt64): &AnyResource{MetadataViews.Resolver} {
           let nft = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
           let gachaNFT = nft as! &GachaNFT.NFT
-          return gachaNFT as &AnyResource{MetadataViews.Resolver}
+          return gachaNFT
       }
 
       destroy() {
@@ -240,7 +309,37 @@ pub contract GachaNFT: NonFungibleToken {
     }
 
     pub resource NFTMinter {
-      
+    
+      pub fun mint(
+        recipient: &{NonFungibleToken.CollectionPublic},
+        royalties: [MetadataViews.Royalty],
+        item: Item,
+      ) {
+          let metadata: {String: AnyStruct} = {}
+          let currentBlock = getCurrentBlock()
+          metadata["mintedBlock"] = currentBlock.height
+          metadata["mintedTime"] = currentBlock.timestamp
+          metadata["minter"] = recipient.owner!.address
+
+          // create a new NFT
+          var newNFT <- create NFT(
+              id: item.id,
+              name: item.name,
+              description: item.description,
+              thumbnail: item.thumbnail,
+              royalties: royalties,
+              metadata: metadata,
+          )
+
+          // deposit it in the recipient's account using their reference
+          recipient.deposit(token: <-newNFT)
+
+          GachaNFT.totalSupply = GachaNFT.totalSupply + 1
+      }
+    }
+
+    pub fun createNFTMinter(): @NFTMinter {
+      return <- create NFTMinter()
     }
 
     init() {
@@ -249,5 +348,18 @@ pub contract GachaNFT: NonFungibleToken {
       self.CollectionStoragePath = StoragePath(identifier: "GachaNFTCollection") ?? panic("can not specify storage path.")
       self.CollectionPublicPath = PublicPath(identifier: "GachaNFTCollection") ?? panic("can not specify public path.")
       self.MinterStoragePath = StoragePath(identifier: "GachaNFTMinter") ?? panic("can not specify storage path.")
+
+      self.ids = {
+        1: Item(
+          id: 1, name: "Item1", description: "Normal item.", thumbnail: "", rarity: "N", weight: 60
+        ),
+        2: Item(
+          id: 2, name: "Item2", description: "Rea item.", thumbnail: "", rarity: "R", weight: 30
+        ),
+        1: Item(
+          id: 3, name: "Item3", description: "Super Rea item.", thumbnail: "", rarity: "SR", weight: 10
+        )
+      }
     }
 }
+ 
