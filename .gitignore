@@ -1,2 +1,5 @@
 
 bob.private.json
+
+.env
+.*.env
