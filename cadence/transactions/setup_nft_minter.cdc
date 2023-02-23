@@ -9,5 +9,6 @@ transaction {
   prepare(signer: AuthAccount) {
     let minter <- GachaNFT.createNFTMinter()
     signer.save(<- minter, to: GachaNFT.MinterStoragePath)
+    log("complete setup minter!!")
   }
 }

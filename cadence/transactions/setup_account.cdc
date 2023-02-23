@@ -19,5 +19,8 @@ transaction {
       GachaNFT.CollectionPublicPath,
       target: GachaNFT.CollectionStoragePath
     )
+
+    log("complete setup!!")
   }
 }
+ 

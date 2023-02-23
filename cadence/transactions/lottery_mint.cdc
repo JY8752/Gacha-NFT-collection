@@ -1,4 +1,5 @@
 import GachaNFT from "../contracts/GachaNFT.cdc"
+import Gacha from "../contracts/Gacha.cdc"
 import NonFungibleToken from "../contracts/lib/NonFungibleToken.cdc"
 
 transaction(
@@ -43,7 +44,7 @@ transaction(
             let item = ids[key]!
             currentWeight = currentWeight + item.weight
             if rand < currentWeight {
-                lotteryItem = item
+                lotteryItem = item as? GachaNFT.Item ?? panic("LotteryItem type is not GachaNFT.Item!!")
                 break
             }
         }
@@ -60,10 +61,14 @@ transaction(
                 royalties: [],
                 item: lotteryItem!
             )
+            log("execute mint!!")
         } else {
             // 既に持ってるので個数を増やす
             self.recipientCollectionRef.increceAmount(id: lotteryItem!.id, amount: 1)
+            log("increce item amount!!")
         }
+
+        log("complete lottery!!")
     }
 }
  

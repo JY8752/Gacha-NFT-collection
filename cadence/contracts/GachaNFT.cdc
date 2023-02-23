@@ -2,7 +2,7 @@ import NonFungibleToken from "./lib/NonFungibleToken.cdc"
 import MetadataViews from "./lib/MetadataViews.cdc"
 import Gacha from "./Gacha.cdc"
 
-pub contract GachaNFT: NonFungibleToken {
+pub contract GachaNFT: NonFungibleToken, Gacha {
     // NonFungibleToken override
     pub var totalSupply: UInt64
 
@@ -14,13 +14,16 @@ pub contract GachaNFT: NonFungibleToken {
     // NonFungibleToken override
     pub event Deposit(id: UInt64, to: Address?)
 
+    pub event Increce(id: UInt64, beforeAmount: UInt32, afterAmount: UInt32)
+    pub event Decrece(id: UInt64, beforeAmount: UInt32, afterAmount: UInt32)
+
     /// path
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
     pub let MinterStoragePath: StoragePath
 
     /// NFTとして発行するトークン情報
-    pub struct Item {
+    pub struct Item: Gacha.HasWeight {
       pub let id: UInt64
       pub let name: String
       pub let description: String
@@ -44,7 +47,7 @@ pub contract GachaNFT: NonFungibleToken {
     }
 
     /// key: token_kind_id value: token_info
-    pub let ids: {UInt64: Item}
+    pub let ids: {UInt64: AnyStruct{Gacha.HasWeight}}
 
     // NonFungibleToken override
     pub fun createEmptyCollection(): @NonFungibleToken.Collection {
@@ -55,9 +58,6 @@ pub contract GachaNFT: NonFungibleToken {
     pub resource NFT: NonFungibleToken.INFT, MetadataViews.Resolver {
       // NonfungibleToken.INFT override token kind id(not unique)
       pub let id: UInt64
-
-      /// amount
-      pub var amount: UInt32
 
       /// metadata
       pub let name: String
@@ -80,7 +80,6 @@ pub contract GachaNFT: NonFungibleToken {
         self.thumbnail = thumbnail
         self.royalties = royalties
         self.metadata = metadata
-        self.amount = 1
       }
     
       // MetadaViews.Resolver override 
@@ -128,7 +127,7 @@ pub contract GachaNFT: NonFungibleToken {
             return MetadataViews.Royalties(self.royalties)
           // 外部URL
           case Type<MetadataViews.ExternalURL>():
-            return MetadataViews.ExternalURL("https://...../".concat(self.id.toString())) // TODO
+            return MetadataViews.ExternalURL("https://example.com/".concat(self.id.toString()))
           // NFTコレクション情報
           case Type<MetadataViews.NFTCollectionData>():
             return MetadataViews.NFTCollectionData(
@@ -147,22 +146,22 @@ pub contract GachaNFT: NonFungibleToken {
           case Type<MetadataViews.NFTCollectionDisplay>():
             let media = MetadataViews.Media(
               file: MetadataViews.HTTPFile(
-                url: "https://xxxxxxxx.svg" // TODO
+                url: "https://xxxxxxxx.svg"
               ),
               mediaType: "image/svg+xml"
             )
             return MetadataViews.NFTCollectionDisplay(
                 name: "GachaNFT Collection",
                 description: "This collection has Gacha feature.",
-                externalURL: MetadataViews.ExternalURL("https://xxxxx"), // TODO
+                externalURL: MetadataViews.ExternalURL("https://xxxxx"),
                 squareImage: media, // コレクションのスクエア画像
                 bannerImage: media, // コレクションのバナー画像
                 // SNSなど
                 socials: {
-                    "twitter": MetadataViews.ExternalURL("https://twitter.com/xxxxxx") // TODO
+                    "twitter": MetadataViews.ExternalURL("https://twitter.com/xxxxxx")
                 }
             )
-          // key-valueで取り出せる属性的なやつ // TODO
+          // key-valueで取り出せる属性的なやつ
           case Type<MetadataViews.Traits>():
             // exclude mintedTime and foo to show other uses of Traits
             let excludedTraits = ["mintedTime", "foo"]
@@ -181,8 +180,6 @@ pub contract GachaNFT: NonFungibleToken {
         }
         return nil
       }
-    
-
     }
 
     // publicに公開する機能群
@@ -200,7 +197,6 @@ pub contract GachaNFT: NonFungibleToken {
       pub fun getAmount(id: UInt64): UInt32
       pub fun getAmounts(): {UInt64:UInt32}
     }
-
 
     // NonFungibleToken override
     pub resource Collection: 
@@ -221,17 +217,20 @@ pub contract GachaNFT: NonFungibleToken {
       } 
 
       pub fun increceAmount(id: UInt64, amount: UInt32) {
-        let beforeAmnount = self.ownedAmounts[id] ?? panic("Not have toknen, so instedof deposit!")
-        self.ownedAmounts[id] = beforeAmnount + amount
+        let beforeAmount = self.ownedAmounts[id] ?? panic("Does Not have token, so instedof deposit!")
+        let afterAmount = beforeAmount + amount
+        self.ownedAmounts[id] = afterAmount
+
+        emit Increce(id: id, beforeAmount: beforeAmount, afterAmount: afterAmount)
       }
 
       pub fun decreseAmount(id: UInt64, amount: UInt32) {
-        pre {
-          self.ownedAmounts[id] == nil: "Not have token!!"
-          self.ownedAmounts[id]! - amount < 0: "The amount you do not have is specified!"
-        }
-        let afterAmount = self.ownedAmounts[id]! - amount
+        let beforeAmount = self.ownedAmounts[id] ?? panic("Does Not have token!")
+        let afterAmount = beforeAmount - amount
         self.ownedAmounts[id] = afterAmount
+
+        emit Decrece(id: id, beforeAmount: beforeAmount, afterAmount: afterAmount)
+
         if(afterAmount == 0) {
           // なくなったのでリソースも消す
           destroy self.withdraw(withdrawID: id)
@@ -349,6 +348,7 @@ pub contract GachaNFT: NonFungibleToken {
       self.CollectionPublicPath = PublicPath(identifier: "GachaNFTCollection") ?? panic("can not specify public path.")
       self.MinterStoragePath = StoragePath(identifier: "GachaNFTMinter") ?? panic("can not specify storage path.")
 
+      // TODO コントラクタ引数にする
       self.ids = {
         1: Item(
           id: 1, name: "Item1", description: "Normal item.", thumbnail: "", rarity: "N", weight: 60
