@@ -37,8 +37,23 @@ mint
 flow transactions send ./cadence/transactions/lottery_mint.cdc --signer default eb179c27144f783c
 ```
 
+destroy collection
+```
+flow transactions send ./cadence/transactions/destroy_collection.cdc --signer default
+```
+
 ## scripts
  
 ```
 flow scripts execute ./cadence/scripts/get_amounts.cdc eb179c27144f783c
+```
+
+## deploy contract
+```
+flow project deploy --network=testnet
+```
+
+## update contract
+```
+flow accounts update-contract ./cadence/contracts/GachaNFT.cdc --signer bob --network testnet
 ```

@@ -12,9 +12,6 @@
 		"testnet": "access.devnet.nodes.onflow.org:9000"
 	},
 	"accounts": {
-		"bob": {
-			"fromFile": "bob.private.json"
-		},
 		"default": {
 			"address": "f669cb8d41ce0c74",
 			"key": "fdb4fb8205726586789cd48ebd6cfb8a6aa11deab542012ced3d4ed2b8aaa4c7"
@@ -36,15 +33,6 @@
 				"FungibleToken"
 			],
 			"lib": [
-				"MetadataViews",
-				"NonFungibleToken"
-			]
-		},
-		"testnet": {
-			"bob": [
-				"Gacha",
-				"GachaNFT",
-				"FungibleToken",
 				"MetadataViews",
 				"NonFungibleToken"
 			]

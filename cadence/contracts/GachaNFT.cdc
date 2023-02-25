@@ -21,6 +21,7 @@ pub contract GachaNFT: NonFungibleToken, Gacha {
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
     pub let MinterStoragePath: StoragePath
+    pub let GachaPublicPath: PublicPath
 
     /// NFTとして発行するトークン情報
     pub struct Item: Gacha.HasWeight {
@@ -193,9 +194,6 @@ pub contract GachaNFT: NonFungibleToken, Gacha {
                   "Cannot borrow ExampleNFT reference: the ID of the returned reference is incorrect"
           }
       }
-      pub fun increceAmount(id: UInt64, amount: UInt32)
-      pub fun getAmount(id: UInt64): UInt32
-      pub fun getAmounts(): {UInt64:UInt32}
     }
 
     // NonFungibleToken override
@@ -204,7 +202,10 @@ pub contract GachaNFT: NonFungibleToken, Gacha {
       NonFungibleToken.Provider,
       NonFungibleToken.Receiver,  
       NonFungibleToken.CollectionPublic, 
-      MetadataViews.ResolverCollection 
+      MetadataViews.ResolverCollection,
+      Gacha.IncreceAmount,
+      Gacha.DecreceAmount,
+      Gacha.GetAmounts
     {
       // NonFungibleToken.Collection override
       pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
@@ -304,6 +305,7 @@ pub contract GachaNFT: NonFungibleToken, Gacha {
 
       destroy() {
           destroy self.ownedNFTs
+          self.ownedAmounts = {}
       }
     }
 
@@ -347,6 +349,7 @@ pub contract GachaNFT: NonFungibleToken, Gacha {
       self.CollectionStoragePath = StoragePath(identifier: "GachaNFTCollection") ?? panic("can not specify storage path.")
       self.CollectionPublicPath = PublicPath(identifier: "GachaNFTCollection") ?? panic("can not specify public path.")
       self.MinterStoragePath = StoragePath(identifier: "GachaNFTMinter") ?? panic("can not specify storage path.")
+      self.GachaPublicPath = PublicPath(identifier: "GachaPublic") ?? panic("can not specify public path.")
 
       // TODO コントラクタ引数にする
       self.ids = {
@@ -356,7 +359,7 @@ pub contract GachaNFT: NonFungibleToken, Gacha {
         2: Item(
           id: 2, name: "Item2", description: "Rea item.", thumbnail: "", rarity: "R", weight: 30
         ),
-        1: Item(
+        3: Item(
           id: 3, name: "Item3", description: "Super Rea item.", thumbnail: "", rarity: "SR", weight: 10
         )
       }

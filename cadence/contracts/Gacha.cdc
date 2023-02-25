@@ -23,7 +23,20 @@ pub contract interface Gacha {
     /// key: item_id value: item
     pub let ids: {UInt64: AnyStruct{HasWeight}}
 
-    pub resource Collection {
+    pub resource interface IncreceAmount {
+      pub fun increceAmount(id: UInt64, amount: UInt32)
+    }
+
+    pub resource interface DecreceAmount {
+      pub fun decreseAmount(id: UInt64, amount: UInt32)
+    }
+
+    pub resource interface GetAmounts {
+      pub fun getAmount(id: UInt64): UInt32
+      pub fun getAmounts(): {UInt64:UInt32}
+    }
+
+    pub resource Collection: IncreceAmount, DecreceAmount, GetAmounts {
       /// key: item_id value: amount
       pub var ownedAmounts: {UInt64:UInt32}
 

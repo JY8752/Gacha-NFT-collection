@@ -3,3 +3,5 @@ bob.private.json
 
 .env
 .*.env
+alice.pkey
+deploy-testnet-acc1.pkey

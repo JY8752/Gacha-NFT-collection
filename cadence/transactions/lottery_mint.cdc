@@ -6,7 +6,8 @@ transaction(
     recipient: Address
 ) {
     let minter: &GachaNFT.NFTMinter
-    let recipientCollectionRef: &{NonFungibleToken.CollectionPublic, GachaNFT.GachaNFTCollectionPublic}
+    let recipientCollectionRef: &{NonFungibleToken.CollectionPublic}
+    let gachaRef: &{Gacha.IncreceAmount, Gacha.GetAmounts}
 
     prepare(acct: AuthAccount) {
         self.minter = acct.borrow<&GachaNFT.NFTMinter>(from: GachaNFT.MinterStoragePath)
@@ -14,8 +15,14 @@ transaction(
         
         self.recipientCollectionRef = getAccount(recipient)
             .getCapability(GachaNFT.CollectionPublicPath)
-            .borrow<&{NonFungibleToken.CollectionPublic, GachaNFT.GachaNFTCollectionPublic}>()
+            .borrow<&{NonFungibleToken.CollectionPublic}>()
             ?? panic("Account does not store collection object at the specify public path")
+        
+        self.gachaRef = getAccount(recipient)
+            .getCapability(GachaNFT.GachaPublicPath)
+            .borrow<&{Gacha.IncreceAmount, Gacha.GetAmounts}>()
+            ?? panic("Account does not store collection object at the specify public path")
+
     }
 
     execute {
@@ -54,7 +61,7 @@ transaction(
             panic("Fail lottery NFT!")
         }
 
-        if self.recipientCollectionRef.getAmount(id: lotteryItem!.id) == 0 {
+        if self.gachaRef.getAmount(id: lotteryItem!.id) == 0 {
             // まだ持ってないトークンなので普通にmintする
             self.minter.mint(
                 recipient: self.recipientCollectionRef,
@@ -64,7 +71,7 @@ transaction(
             log("execute mint!!")
         } else {
             // 既に持ってるので個数を増やす
-            self.recipientCollectionRef.increceAmount(id: lotteryItem!.id, amount: 1)
+            self.gachaRef.increceAmount(id: lotteryItem!.id, amount: 1)
             log("increce item amount!!")
         }
 

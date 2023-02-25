@@ -6,8 +6,8 @@ type LayoutProps = Required<{
 }>;
 
 export const Layout = ({ children }: LayoutProps) => (
-  <div className="container mx-auto p-5">
+  <>
     <Header />
-    {children}
-  </div>
+    <div className="container mx-auto p-5">{children}</div>
+  </>
 );
