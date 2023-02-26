@@ -20,6 +20,13 @@
 			"address": "f8d6e0586b0a20c7",
 			"key": "6d12eebfef9866c9b6fa92b97c6e705c26a1785b1e7944da701fc545a51d4673"
 		},
+		"gacha-nft-deploy-account2": {
+			"address": "5a9a22c936e8866e",
+			"key": {
+				"type": "file",
+				"location": "gacha-nft-deploy-account2.pkey"
+			}
+		},
 		"lib": {
 			"address": "fd43f9148d4b725d",
 			"key": "a245b9090f213431a6c692ae717a8b9fa981d7555f607a6c1db1a9a9bad406a4"
@@ -33,6 +40,15 @@
 				"FungibleToken"
 			],
 			"lib": [
+				"MetadataViews",
+				"NonFungibleToken"
+			]
+		},
+		"testnet": {
+			"gacha-nft-deploy-account2": [
+				"Gacha",
+				"GachaNFT",
+				"FungibleToken",
 				"MetadataViews",
 				"NonFungibleToken"
 			]

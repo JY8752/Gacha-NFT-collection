@@ -105,8 +105,9 @@ pub contract GachaNFT: NonFungibleToken, Gacha {
             return MetadataViews.Display(
                 name: self.name,
                 description: self.description,
-                thumbnail: MetadataViews.HTTPFile(
-                    url: self.thumbnail
+                thumbnail: MetadataViews.IPFSFile(
+                    cid: self.thumbnail,
+                    path: nil
                 )
             )
           // 複数のオブジェクトを発行するコレクション
@@ -146,8 +147,9 @@ pub contract GachaNFT: NonFungibleToken, Gacha {
           // NFTコレクションを表示するのに必要な情報
           case Type<MetadataViews.NFTCollectionDisplay>():
             let media = MetadataViews.Media(
-              file: MetadataViews.HTTPFile(
-                url: "https://xxxxxxxx.svg"
+              file: MetadataViews.IPFSFile(
+                cid: "QmTA3bk8GiXDnNdtLKWzXVGQxNqbfQv7WKZ7YoqCHCs6bJ",
+                path: nil
               ),
               mediaType: "image/svg+xml"
             )
@@ -354,13 +356,13 @@ pub contract GachaNFT: NonFungibleToken, Gacha {
       // TODO コントラクタ引数にする
       self.ids = {
         1: Item(
-          id: 1, name: "Item1", description: "Normal item.", thumbnail: "", rarity: "N", weight: 60
+          id: 1, name: "Item1", description: "Normal item.", thumbnail: "QmSzzQjaQSsUgYpxXxtF1mRgUzFYKh5HZQRi2RehNs8ZhH", rarity: "N", weight: 60
         ),
         2: Item(
-          id: 2, name: "Item2", description: "Rea item.", thumbnail: "", rarity: "R", weight: 30
+          id: 2, name: "Item2", description: "Rea item.", thumbnail: "QmeHqCZ2M3FJa1J91Rd8arhKj5UBAmbs4i3mHxs6QVz6xS", rarity: "R", weight: 30
         ),
         3: Item(
-          id: 3, name: "Item3", description: "Super Rea item.", thumbnail: "", rarity: "SR", weight: 10
+          id: 3, name: "Item3", description: "Super Rea item.", thumbnail: "QmQCrYirym911cBSygYX84sWmUmirtRqpXiZFVr67s5pm7", rarity: "SR", weight: 10
         )
       }
     }

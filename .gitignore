@@ -5,3 +5,4 @@ bob.private.json
 .*.env
 alice.pkey
 deploy-testnet-acc1.pkey
+gacha-nft-deploy-account2.pkey
