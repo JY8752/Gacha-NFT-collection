@@ -1,26 +1,42 @@
 import * as fcl from '@onflow/fcl';
 import { useEffect, useState } from 'react';
-import { Display } from '../types/gacha';
+import { Display, GachaCollectionItem, Transaction } from '../types/gacha';
 
 export const useGacha = (addr: string) => {
-  const [amounts, setAmounts] = useState({});
-  const [ids, setIds] = useState<number[]>([]);
-
-  const [collection, setCollection] = useState<{ [key: number]: Display }[]>(
+  const [collectionItems, setCollectionItems] = useState<GachaCollectionItem[]>(
     [],
   );
 
   useEffect(() => {
     (async () => {
-      setAmounts(await getAmounts(addr));
-      setIds(await getIds());
-      setCollection(await getCollection(addr));
+      setCollectionItems(await getCollectionOwnedMap());
     })();
   }, []);
 
   // コレクション情報を取得する
-  const getCollectionOwnedMap = () => {
-    // TODO
+  const getCollectionOwnedMap = async (): Promise<GachaCollectionItem[]> => {
+    const amounts = await getAmounts(addr);
+    const ids = await getIds();
+    const collection = await getCollection(addr);
+
+    return ids.map((id) => {
+      const display = collection.find((item) => item[id]);
+      if (display) {
+        // 所持してる
+        return {
+          id,
+          name: display[id].name,
+          description: display[id].description,
+          thumbnail: display[id].thumbnail.cid,
+          amount: Number(amounts[id]) ?? 0,
+        };
+      } else {
+        return {
+          id,
+          amount: 0,
+        };
+      }
+    });
   };
 
   // コレクションのアイテム数を取得する
@@ -103,7 +119,7 @@ export const useGacha = (addr: string) => {
   };
 
   // コレクションの作成
-  const setupCollection = async () => {
+  const setupCollection = async (): Promise<Transaction> => {
     const transactionId = await fcl.mutate({
       cadence: `
         import GachaNFT from 0xGacha
@@ -143,12 +159,13 @@ export const useGacha = (addr: string) => {
       authorizations: [fcl.authz],
       limit: 50,
     });
-    const transaction = await fcl.tx(transactionId).onceSealed();
+    const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
     console.log(transaction);
+    return transaction;
   };
 
   // mint
-  const lotteryMint = async (addr: string) => {
+  const lotteryMint = async (addr: string): Promise<Transaction> => {
     const transactionId = await fcl.mutate({
       cadence: `
         import GachaNFT from 0xGacha
@@ -238,12 +255,13 @@ export const useGacha = (addr: string) => {
       authorizations: [fcl.authz],
       limit: 50,
     });
-    const transaction = await fcl.tx(transactionId).onceSealed();
+    const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
     console.log(transaction);
+    return transaction;
   };
 
   // setup minter
-  const setupMinter = async () => {
+  const setupMinter = async (): Promise<Transaction> => {
     const transactionId = await fcl.mutate({
       cadence: `
         import GachaNFT from 0xGacha
@@ -262,12 +280,13 @@ export const useGacha = (addr: string) => {
       authorizations: [fcl.currentUser],
       limit: 50,
     });
-    const transaction = await fcl.tx(transactionId).onceSealed();
+    const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
     console.log(transaction);
+    return transaction;
   };
 
   // destroy collection
-  const destroyCollection = async () => {
+  const destroyCollection = async (): Promise<Transaction> => {
     const transactionId = await fcl.mutate({
       cadence: `
         import GachaNFT from 0xGacha
@@ -283,12 +302,13 @@ export const useGacha = (addr: string) => {
       authorizations: [fcl.currentUser],
       limit: 50,
     });
-    const transaction = await fcl.tx(transactionId).onceSealed();
+    const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
     console.log(transaction);
+    return transaction;
   };
 
   // remove collection storage
-  const removeCollection = async () => {
+  const removeCollection = async (): Promise<Transaction> => {
     const transactionId = await fcl.mutate({
       cadence: `
         import GachaNFT from 0xGacha
@@ -303,12 +323,13 @@ export const useGacha = (addr: string) => {
       authorizations: [fcl.currentUser],
       limit: 50,
     });
-    const transaction = await fcl.tx(transactionId).onceSealed();
+    const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
     console.log(transaction);
+    return transaction;
   };
 
   // remove minter storage
-  const removeMinter = async () => {
+  const removeMinter = async (): Promise<Transaction> => {
     const transactionId = await fcl.mutate({
       cadence: `
         import GachaNFT from 0xGacha
@@ -325,10 +346,11 @@ export const useGacha = (addr: string) => {
     });
     const transaction = await fcl.tx(transactionId).onceSealed();
     console.log(transaction);
+    return transaction;
   };
 
   // unlink
-  const unlink = async () => {
+  const unlink = async (): Promise<Transaction> => {
     const transactionId = await fcl.mutate({
       cadence: `
         import GachaNFT from 0xGacha
@@ -344,8 +366,9 @@ export const useGacha = (addr: string) => {
       authorizations: [fcl.currentUser],
       limit: 50,
     });
-    const transaction = await fcl.tx(transactionId).onceSealed();
+    const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
     console.log(transaction);
+    return transaction;
   };
 
   return {
@@ -359,11 +382,8 @@ export const useGacha = (addr: string) => {
     removeCollection,
     removeMinter,
     unlink,
-    amounts,
-    setAmounts,
-    ids,
-    setIds,
-    collection,
-    setCollection,
+    getCollectionOwnedMap,
+    collectionItems,
+    setCollectionItems,
   };
 };
