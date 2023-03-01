@@ -1,9 +1,17 @@
 import Image from 'next/image';
+import { useContext } from 'react';
+import { UserContext } from '../hooks/useConnect';
 import { useGacha } from '../hooks/useGacha';
 
 const Home = () => {
-  const addr = '0x823341d5284d4fc1';
-  const increceEvent = `A.${process.env.NEXT_PUBLIC_GACHA_CONTRACT_ADDRESS}.GachaNFT.Increce`;
+  const contractAddress = process.env.NEXT_PUBLIC_GACHA_CONTRACT_ADDRESS ?? '';
+  const ipfsDomain = process.env.NEXT_PUBLIC_IPFS_GATEWAY_DOMAIN ?? '';
+
+  const increceEvent = `A.${contractAddress}.GachaNFT.Increce`;
+  const depositEvent = `A.${contractAddress}.GachaNFT.Deposit`;
+
+  const { user } = useContext(UserContext);
+  const addr = user?.addr ?? '';
 
   const {
     getAmounts,
@@ -21,21 +29,26 @@ const Home = () => {
     setCollectionItems,
   } = useGacha(addr);
 
-  const buyGacha = async () => {
-    const transaction = await lotteryMint(addr);
-    setCollectionItems(await getCollectionOwnedMap());
-    const getId =
-      transaction.events.find((tx) => tx.type === increceEvent)?.data.id ?? '';
-    alert(`
-      Get Item!!
-      item id: ${getId}
-    `);
+  const buyGacha = () => {
+    lotteryMint(addr).then((transaction) => {
+      getCollectionOwnedMap().then((items) => setCollectionItems(items));
+
+      const getId =
+        transaction.events.find(
+          (tx) => tx.type === increceEvent || tx.type === depositEvent,
+        )?.data.id ?? '';
+
+      alert(`
+        Get Item!!
+        item id: ${getId}
+      `);
+    });
   };
 
   return (
     <>
       <h1 className="text-3xl">Scripts/Transactions</h1>
-      <div>
+      <div className="w-50 m-5 flex flex-wrap justify-center">
         <button
           className="m-2 rounded bg-green-400 p-2 hover:bg-green-300"
           onClick={() => getAmounts(addr)}
@@ -103,7 +116,7 @@ const Home = () => {
           unlink
         </button>
       </div>
-      <div className="flex flex-col items-center">
+      <div className="my-10 flex flex-col items-center">
         <Image
           src={'/gachagacha.png'}
           height={400}
@@ -119,14 +132,14 @@ const Home = () => {
         </button>
       </div>
       <h1 className="text-3xl">Collection</h1>
-      <div className="flex">
+      <div className="m-5 flex justify-center">
         {collectionItems.map((item) => {
           if (item.amount !== 0) {
             return (
-              <div className="m-1 w-60 rounded bg-blue-300 p-3" key={item.id}>
+              <div className="m-3 w-60 rounded bg-blue-300 p-3" key={item.id}>
                 <div className="relative h-96 max-w-full">
                   <Image
-                    src={`https://cloudflare-ipfs.com/ipfs/${item.thumbnail}`}
+                    src={`https://${ipfsDomain}/${item.thumbnail}`}
                     fill
                     style={{
                       objectFit: 'contain',

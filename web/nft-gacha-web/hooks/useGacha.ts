@@ -9,9 +9,12 @@ export const useGacha = (addr: string) => {
 
   useEffect(() => {
     (async () => {
-      setCollectionItems(await getCollectionOwnedMap());
+      if (addr) {
+        setCollectionItems(await getCollectionOwnedMap());
+      }
     })();
-  }, []);
+    return () => setCollectionItems([]);
+  }, [addr]);
 
   // コレクション情報を取得する
   const getCollectionOwnedMap = async (): Promise<GachaCollectionItem[]> => {
@@ -55,11 +58,9 @@ export const useGacha = (addr: string) => {
         `,
         args: (arg: any, t: any) => [arg(addr, t.Address)],
       });
-      console.log(items);
       return items;
     } catch (e: unknown) {
       console.log(e);
-      alert('接続しているアカウント内にコレクションが保存されていません');
     }
   };
 
@@ -94,11 +95,9 @@ export const useGacha = (addr: string) => {
         `,
         args: (arg: any, t: any) => [arg(addr, t.Address)],
       });
-      console.log(collection);
       return collection;
     } catch (e: unknown) {
       console.log(e);
-      alert('接続しているアカウント内にコレクションが保存されていません');
       return Promise.resolve([]);
     }
   };
@@ -114,7 +113,6 @@ export const useGacha = (addr: string) => {
           }
         `,
     });
-    console.log(ids);
     return ids.sort();
   };
 
@@ -160,7 +158,6 @@ export const useGacha = (addr: string) => {
       limit: 50,
     });
     const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
-    console.log(transaction);
     return transaction;
   };
 
@@ -256,7 +253,6 @@ export const useGacha = (addr: string) => {
       limit: 50,
     });
     const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
-    console.log(transaction);
     return transaction;
   };
 
@@ -281,7 +277,6 @@ export const useGacha = (addr: string) => {
       limit: 50,
     });
     const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
-    console.log(transaction);
     return transaction;
   };
 
@@ -303,7 +298,6 @@ export const useGacha = (addr: string) => {
       limit: 50,
     });
     const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
-    console.log(transaction);
     return transaction;
   };
 
@@ -324,7 +318,6 @@ export const useGacha = (addr: string) => {
       limit: 50,
     });
     const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
-    console.log(transaction);
     return transaction;
   };
 
@@ -345,7 +338,6 @@ export const useGacha = (addr: string) => {
       limit: 50,
     });
     const transaction = await fcl.tx(transactionId).onceSealed();
-    console.log(transaction);
     return transaction;
   };
 
@@ -367,7 +359,6 @@ export const useGacha = (addr: string) => {
       limit: 50,
     });
     const transaction: Transaction = await fcl.tx(transactionId).onceSealed();
-    console.log(transaction);
     return transaction;
   };
 
